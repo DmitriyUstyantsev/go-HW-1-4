@@ -1,103 +1,102 @@
 package main
 
 import (
-    "fmt"
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/eiannone/keyboard"
 )
 
-type Cache interface {
-    Get(k string) (string, bool)
-    Set(k, v string)
-}
-
-var _ Cache = (*cacheImpl)(nil)
-
-// Will refine the cache constructor and methods so that they match the Cache interface
-func newCacheImpl() *cacheImpl {
-    return &cacheImpl{data: make(map[string]string)}
-type cacheImpl struct {
-    data map[string]string
-}
-
-func (c *cacheImpl) Get(k string) (string, bool) {
-    v, ok := c.data[k]
-    return v, ok
-}
-
-func (c *cacheImpl) Set(k, v string) {
-    c.data[k] = v
-}
-
-func newDbImpl(cache Cache) *dbImpl {
-    return &dbImpl{cache: cache, dbs: map[string]string{"hello": "world", "test": "test"}}
-}
-
-type dbImpl struct {
-    cache Cache
-    dbs   map[string]string
-}
-
-func (d *dbImpl) Get(k string) (string, bool) {
-    v, ok := d.cache.Get(k)
-    if ok {
-        return fmt.Sprintf("answer from cache: key: %s, val: %s", k, v), ok
-    }
-    v, ok = d.dbs[k]
-    return fmt.Sprintf("answer from dbs: key: %s, val: %s", k, v), ok
+type Item struct {
+	Name     string
+	Datetime time.Time
+	Tags     string
+	Link     string
 }
 
 func main() {
-    c := newCacheImpl()
-    db := newDbImpl(c)
-    fmt.Println(db.Get("test"))
-    fmt.Println(db.Get("hello"))
-}
+	defer func() {
+		_ = keyboard.Close()
+	}()
 
-// package main
+	fmt.Println("Program for adding URLs to the list")
+	fmt.Println("Press Esc to exit the application")
 
-import (
-    "fmt"
-    "sync"
-)
+	// List to store URLs
+	var urlList []Item
 
-type DBSimple struct {
-    data map[string]string
-    mu   sync.RWMutex
-}
+OuterLoop:
+	for {
+		if err := keyboard.Open(); err != nil {
+			log.Fatal(err)
+		}
+		char, key, err := keyboard.GetKey()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-type Cache struct {
-    data map[string]string
-    mu   sync.RWMutex
-}
+		switch char {
+		case 'a':
+			if err := keyboard.Close(); err != nil {
+				log.Fatal(err)
+			}
+			// Adding a new URL to the storage list
+			fmt.Println("Enter a new entry in the format <url description tags>")
+			reader := bufio.NewReader(os.Stdin)
+			text, _ := reader.ReadString('\n')
+			args := strings.Fields(text)
+			if len(args) < 3 {
+				fmt.Println("Enter the correct arguments in the url description tags format")
+				continue OuterLoop
+			}
+			tags := strings.Join(args[2:], ",")
+			newItem := Item{
+				Name:     args[1],
+				Datetime: time.Now(),
+				Tags:     tags,
+				Link:     args[0],
+			}
+			urlList = append(urlList, newItem)
+			fmt.Println("URL added successfully")
 
-func (d *DBSimple) AddData(key, value string) {
-    d.mu.Lock()
-    defer d.mu.Unlock()
-    d.data[key] = value
-}
+		case 'l':
+			// Display list of added URLs
+			fmt.Println("Number of added URLs:", len(urlList))
+			for _, item := range urlList {
+				fmt.Println("Name:", item.Name)
+				fmt.Println("URL:", item.Link)
+				fmt.Println("Tags:", item.Tags)
+				fmt.Println("Date:", item.Datetime.Format("2006-01-02 15:04:05"))
+				fmt.Println("-------------")
+			}
 
-func (c *Cache) FillCache(d *DBSimple) {
-    d.mu.RLock()
-    defer d.mu.RUnlock()
-    for key, value := range d.data {
-        c.mu.Lock()
-        c.data[key] = value
-        c.mu.Unlock()
-    }
-}
+		case 'r':
+			if err := keyboard.Close(); err != nil {
+				log.Fatal(err)
+			}
+			// Deleting a URL from the storage list
+			fmt.Println("Enter the name of the link to delete")
+			reader := bufio.NewReader(os.Stdin)
+			text, _ := reader.ReadString('\n')
+			nameToDelete := strings.TrimSpace(text)
+			var newURLList []Item
+			for _, item := range urlList {
+				if item.Name != nameToDelete {
+					newURLList = append(newURLList, item)
+				}
+			}
+			urlList = newURLList
+			fmt.Printf("Link with name %s has been deleted\n", nameToDelete)
 
-func (c *Cache) GetData(key string) string {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
-    return c.data[key]
-}
-
-func main() {
-    db := &DBSimple{data: make(map[string]string)}
-    db.AddData("key1", "value1")
-
-    cache := &Cache{data: make(map[string]string)}
-    cache.FillCache(db)
-
-    // Check if the data is being returned from the cache
-    fmt.Println(cache.GetData("key1")) // Output: value1
+		default:
+			// If Esc is pressed, exit the application
+			if key == keyboard.KeyEsc {
+				return
+			}
+		}
+	}
 }
