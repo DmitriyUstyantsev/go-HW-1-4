@@ -23,10 +23,10 @@ func main() {
 		_ = keyboard.Close()
 	}()
 
-	fmt.Println("Program for adding URLs to the list")
-	fmt.Println("Press Esc to exit the application")
+	fmt.Println("Программа для добавления URL-адресов в список")
+	fmt.Println("Нажмите Esc, чтобы выйти из приложения")
 
-	// List to store URLs
+	// Список для хранения URL-адресов
 	var urlList []Item
 
 OuterLoop:
@@ -44,13 +44,13 @@ OuterLoop:
 			if err := keyboard.Close(); err != nil {
 				log.Fatal(err)
 			}
-			// Adding a new URL to the storage list
-			fmt.Println("Enter a new entry in the format <url description tags>")
+			// Добавление нового URL-адреса в список
+			fmt.Println("Введите новую запись в формате <теги описания url>")
 			reader := bufio.NewReader(os.Stdin)
 			text, _ := reader.ReadString('\n')
 			args := strings.Fields(text)
 			if len(args) < 3 {
-				fmt.Println("Enter the correct arguments in the url description tags format")
+				fmt.Println("Введите правильные аргументы в формате тегов описания URL-адреса")
 				continue OuterLoop
 			}
 			tags := strings.Join(args[2:], ",")
@@ -61,11 +61,11 @@ OuterLoop:
 				Link:     args[0],
 			}
 			urlList = append(urlList, newItem)
-			fmt.Println("URL added successfully")
+			fmt.Println("URL-адрес успешно добавлен")
 
 		case 'l':
-			// Display list of added URLs
-			fmt.Println("Number of added URLs:", len(urlList))
+			// Отобразить список добавленных URL-адресов
+			fmt.Println("Количество добавленных URL-адресов:", len(urlList))
 			for _, item := range urlList {
 				fmt.Println("Name:", item.Name)
 				fmt.Println("URL:", item.Link)
@@ -78,8 +78,8 @@ OuterLoop:
 			if err := keyboard.Close(); err != nil {
 				log.Fatal(err)
 			}
-			// Deleting a URL from the storage list
-			fmt.Println("Enter the name of the link to delete")
+			// Удаление URL-адреса из списка
+			fmt.Println("Введите название ссылки для удаления")
 			reader := bufio.NewReader(os.Stdin)
 			text, _ := reader.ReadString('\n')
 			nameToDelete := strings.TrimSpace(text)
@@ -93,7 +93,7 @@ OuterLoop:
 			fmt.Printf("Link with name %s has been deleted\n", nameToDelete)
 
 		default:
-			// If Esc is pressed, exit the application
+			// Если нажата клавиша Esc, выход из приложения
 			if key == keyboard.KeyEsc {
 				return
 			}
