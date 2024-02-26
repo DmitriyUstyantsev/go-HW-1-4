@@ -20,6 +20,8 @@
 //	fmt.Println(fileExtension)
 //}
 
+// Второй способ решения
+
 package main
 
 import (
@@ -31,7 +33,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Please provide a file path as a command-line argument")
+		fmt.Println("Пожалуйста, укажите путь к файлу в качестве аргумента командной строки")
 		return
 	}
 
@@ -40,7 +42,7 @@ func main() {
 	fileExt := filepath.Ext(filePath)
 	fileExt = strings.TrimPrefix(fileExt, ".")
 
-	// Output the filename and extension
+	// Напечатать имя файла и расширение
 	fmt.Printf("filename: %s\n", fileName)
 	fmt.Printf("extension: %s\n", fileExt)
 }
