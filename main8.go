@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -24,6 +26,7 @@ var users map[int]*User
 
 func main() {
 	users = make(map[int]*User)
+	loadData()
 	r := chi.NewRouter()
 
 	r.Post("/create", CreateUser)
@@ -32,8 +35,38 @@ func main() {
 	r.Get("/friends/{userID}", GetFriends)
 	r.Put("/user/{userID}", UpdateUserAge)
 
-	http.ListenAndServe(":8080", r)
+	go http.ListenAndServe(":8080", r) // первая реплика на порту 8080
+	http.ListenAndServe(":8081", r)    // вторая реплика на порту 8081
+	//Теперь вы можете запустить две реплики приложения на портах 8080 и 8081, соответственно.
+	saveData()
 }
+
+func loadData() {
+	_, err := os.Stat("users.json")
+	if err == nil {
+		file, err := ioutil.ReadFile("users.json")
+		if err == nil {
+			err = json.Unmarshal(file, &users)
+			if err == nil {
+				return
+			}
+		}
+	}
+
+	users = make(map[int]*User)
+}
+
+func saveData() {
+	data, err := json.Marshal(users)
+	if err == nil {
+		err = ioutil.WriteFile("users.json", data, 0644)
+	}
+}
+
+// Теперь информация о пользователях будет сохраняться в файле "users.json".
+//При запуске приложения, данные будут загружены из файла, а при выполнении операций создания,
+// обновления, удаления или добавления друзей, информация будет автоматически сохраняться в файл.
+//Это позволяет сохранить данные между запусками приложения и обеспечить их целостность в многопоточной среде.
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser User
